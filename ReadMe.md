@@ -58,6 +58,59 @@ Selain fungsi perbankan, proyek ini juga mengimplementasikan materi Sistem Multi
 
 ---
 
+# Panduan Instalasi
+
+## 1. Persiapan Database
+1. Buka MySQL Client Anda (phpMyAdmin, HeidiSQL, DBeaver, dll).
+2. Buat database baru dengan nama `ta_perbankan`.
+3. Import file `database.sql` yang berada di root folder proyek ini ke dalam database `ta_perbankan`.
+
+## 2. Konfigurasi Aplikasi
+1. Salin file `config/example.database.php` dan beri nama baru `config/database.php`.
+2. Buka `config/database.php` dan sesuaikan kredensial database Anda:
+   ```php
+   $host = 'localhost';
+   $username = 'root'; // sesuaikan dengan username database Anda
+   $password = '';     // sesuaikan dengan password database Anda
+   $database = 'ta_perbankan';
+   ```
+
+---
+
+## 3. Cara Menjalankan Aplikasi
+
+### A. Menggunakan XAMPP
+1. Pindahkan atau clone folder proyek ini ke dalam direktori `C:\xampp\htdocs\`.
+2. Pastikan nama folder adalah `php-perbankan-sismul`.
+3. Jalankan **Apache** dan **MySQL** melalui XAMPP Control Panel.
+4. Akses di browser: `http://localhost/php-perbankan-sismul`
+
+### B. Menggunakan Laragon
+1. Pindahkan folder proyek ke dalam direktori `C:\laragon\www\`.
+2. Klik tombol **Start All** pada Laragon.
+3. Laragon akan otomatis membuat virtual host. Akses melalui: `http://php-perbankan-sismul.test` atau `http://localhost/php-perbankan-sismul`
+
+### C. Menggunakan Linux (/var/www/html)
+1. Pindahkan folder proyek ke `/var/www/html/`.
+2. Berikan izin akses folder:
+   ```bash
+   sudo chown -R www-data:www-data /var/www/html/php-perbankan-sismul
+   sudo chmod -R 755 /var/www/html/php-perbankan-sismul
+   ```
+3. Pastikan ekstensi PHP yang dibutuhkan sudah terpasang (mysqli, gd, openssl).
+4. Akses di browser: `http://localhost/php-perbankan-sismul`
+
+### D. Menggunakan PHP Built-in Server
+1. Buka Terminal atau Command Prompt.
+2. Masuk ke direktori root proyek.
+3. Jalankan perintah:
+   ```bash
+   php -S localhost:8080
+   ```
+4. Akses di browser: `http://localhost:8080`
+
+---
+
 # Standar Pengembangan Tim
 
 Seluruh anggota wajib mengikuti standar berikut.

@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS ta_perbankan;
-USE ta_perbankan;
+-- Database name: ta_perbankan;
 
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
