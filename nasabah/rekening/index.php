@@ -1,21 +1,7 @@
 <?php
 session_start();
 include "../../config/database.php";
-// ===================================================================
-// CORE KEAMANAN DATA: AES-256-CBC
-// ===================================================================
-define('ENCRYPT_KEY', 'b4nk_mub4m4d1y4h_sur4k4rt4_32_b1t'); // 32 Karakter
-define('ENCRYPT_IV', '1234567890123456');                 // 16 Karakter
-define('ENCRYPT_METHOD', 'aes-256-cbc');
-
-function enkripsiNoRek($nomor_rekening) {
-    return openssl_encrypt($nomor_rekening, ENCRYPT_METHOD, ENCRYPT_KEY, 0, ENCRYPT_IV);
-}
-
-function dekripsiNoRek($nomor_rekening_encrypted) {
-    return openssl_decrypt($nomor_rekening_encrypted, ENCRYPT_METHOD, ENCRYPT_KEY, 0, ENCRYPT_IV);
-}
-
+include_once "../../helper/encryption.php";
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php?pesan=belum_login');
@@ -26,6 +12,17 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
     header('Location: /login.php?pesan=akses_ditolak');
     exit;
 }
+
+$user_id = $_SESSION['user_id'];
+
+// Ambil nama lengkap dari database untuk kebutuhan display
+$user_query = mysqli_query($conn, "SELECT nama_lengkap FROM users WHERE id = '$user_id'");
+$user_data = mysqli_fetch_assoc($user_query);
+$nama_user = $user_data['nama_lengkap'] ?? 'Nasabah';
+
+// Ambil data rekening nasabah
+$rekening_query = mysqli_query($conn, "SELECT * FROM rekening WHERE user_id = '$user_id'");
+$jumlah_rekening = mysqli_num_rows($rekening_query);
 ?>
 
 <!DOCTYPE html>
@@ -148,11 +145,29 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
 
     <main class="flex-grow-1">
         <div class="container-fluid py-4">
-        echo '<div class="row justify-content-center">';
+            
+            <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'sukses_buat'): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Aktivasi Berhasil!</strong> Rekening baru Anda telah berhasil didaftarkan dan aktif.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php elseif (isset($_GET['pesan']) && $_GET['pesan'] == 'gagal_buat'): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Gagal!</strong> Terjadi kesalahan saat memproses pembuatan rekening baru. Silakan coba lagi.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            if ($jumlah_rekening > 0) {
+                echo '<div class="row justify-content-center">';
                 while ($row = mysqli_fetch_assoc($rekening_query)) {
                     
                     // DEKRIPSI DATA AMAN SENSITIF DISINI
-                    $no_rek_asli = dekripsiNoRek($row['nomor_rekening_encrypted']);
+                    $no_rek_asli = decrypt($row['nomor_rekening_encrypted']);
+                    if (!$no_rek_asli) {
+                        $no_rek_asli = "Gagal Dekripsi";
+                    }
                     
                     $saldo_format = "Rp " . number_format($row['saldo'], 2, ',', '.');
                     $is_aktif = ($row['status_rekening'] === 'Aktif');

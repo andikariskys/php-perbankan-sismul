@@ -158,7 +158,7 @@ CREATE TABLE login_log (
 INSERT INTO login_log
 (user_id,login_at)
 VALUES
-(1,'2026-06-06 14:64:00'),
+(1,'2026-06-06 14:04:00'),
 (2,'2026-06-06 05:00:00');
 
 CREATE TABLE audit_log (
