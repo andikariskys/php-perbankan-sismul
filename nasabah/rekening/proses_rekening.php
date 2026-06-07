@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config/database.php";
+
 // ===================================================================
 // CORE KEAMANAN DATA: AES-256-CBC
 // ===================================================================
@@ -15,7 +16,6 @@ function enkripsiNoRek($nomor_rekening) {
 function dekripsiNoRek($nomor_rekening_encrypted) {
     return openssl_decrypt($nomor_rekening_encrypted, ENCRYPT_METHOD, ENCRYPT_KEY, 0, ENCRYPT_IV);
 }
-
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php?pesan=belum_login');
@@ -48,7 +48,6 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
 
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container-fluid">
 
@@ -134,7 +133,6 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
         </div>
     </nav>
 
-    <!-- Header -->
     <header class="hero py-5 shadow-sm">
         <div class="container">
             <h1 class="display-6 fw-bold">
@@ -147,11 +145,29 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
     </header>
 
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
-        echo '<div class="row justify-content-center">';
+        <div class="container py-4">
+
+            <?php
+            // Ambil data user ID dari session login
+            $user_id = $_SESSION['user_id'];
+
+            // Ambil nama lengkap dari database untuk kebutuhan display
+            $user_query = mysqli_query($conn, "SELECT nama_lengkap FROM users WHERE id = '$user_id'");
+            $user_data = mysqli_fetch_assoc($user_query);
+            $nama_user = $user_data['nama_lengkap'] ?? 'Nasabah';
+
+            // Ambil data rekening nasabah
+            $rekening_query = mysqli_query($conn, "SELECT * FROM rekening WHERE user_id = '$user_id'");
+            $jumlah_rekening = mysqli_num_rows($rekening_query);
+
+            if ($jumlah_rekening > 0) {
+                // -----------------------------------------------------------------
+                // KONDISI A: JIKA SUDAH PUNYA REKENING -> DEKRIPSI & TAMPILKAN
+                // -----------------------------------------------------------------
+                echo '<div class="row justify-content-center">';
                 while ($row = mysqli_fetch_assoc($rekening_query)) {
                     
-                    // DEKRIPSI DATA AMAN SENSITIF DISINI
+                    // PROSES DEKRIPSI
                     $no_rek_asli = dekripsiNoRek($row['nomor_rekening_encrypted']);
                     
                     $saldo_format = "Rp " . number_format($row['saldo'], 2, ',', '.');
@@ -160,7 +176,7 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
                     echo '
                     <div class="col-md-6 mb-4">
                         <div class="card shadow border-0 overflow-hidden">
-                            <div class="card-body bg-dark text-white p-4 relative" style="background: linear-gradient(135deg, #1f2937, #111827);">
+                            <div class="card-body bg-dark text-white p-4" style="background: linear-gradient(135deg, #1f2937, #111827);">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="card-title text-success fw-bold mb-0">
                                         <i class="fa-solid fa-building-columns me-2"></i>' . htmlspecialchars($row['jenis_rekening']) . '
@@ -208,7 +224,7 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
                                 <form action="proses_rekening.php" method="POST">
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold text-secondary">Pilih Jenis Tabungan</label>
-                                        <div class="form-check p-3 border rounded mb-2 hover-shadow transition">
+                                        <div class="form-check p-3 border rounded mb-2">
                                             <input class="form-check-input ms-0 me-2" type="radio" name="jenis_rekening" id="tabungan" value="Tabungan" checked>
                                             <label class="form-check-label fw-medium" for="tabungan">
                                                 Tabungan Reguler <small class="text-muted d-block font-normal">Cocok untuk kebutuhan transaksi harian.</small>
@@ -235,14 +251,13 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-light border-top py-3">
         <div class="container-fluid text-center">
             <small>
                 © <?= date('Y'); ?> Bank Multimedia
             </small>
         </div>
-    </footer>
+    </footer >
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
