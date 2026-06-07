@@ -121,7 +121,7 @@ VALUES
 (1,2,100000,'Transfer keluarga'),
 (2,1,50000,'Transfer balik');
 
-CREATE TABLE topup_ allet (
+CREATE TABLE topup_ewallet (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     rekening_id INT NOT NULL,
     provider_id INT NOT NULL,
