@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
-$username = 'root';
-$password = '';
+$username = 'username';
+$password = 'password';
 $database = 'ta_perbankan';
 
 try {
@@ -10,5 +10,5 @@ try {
         throw new Exception("Connection failed: " . mysqli_connect_error());
     }
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
+    echo "<b>Error:</b> " . $e->getMessage();
 }
