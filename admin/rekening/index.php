@@ -1,5 +1,7 @@
 <?php
 session_start();
+include "../../config/database.php";
+// Contoh penggunaan: $result = mysqli_query($conn, "SELECT * FROM table_name");
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php?pesan=belum_login');
@@ -21,6 +23,7 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     <title>Kelola Rekening</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .hero {
             background: linear-gradient(135deg, #fd7e14, #b45309);
