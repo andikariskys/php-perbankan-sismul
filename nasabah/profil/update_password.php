@@ -49,6 +49,8 @@ $stmt = mysqli_prepare($conn, "UPDATE users SET password = ?, updated_at = NOW()
 mysqli_stmt_bind_param($stmt, "si", $hash, $user_id);
 
 if (mysqli_stmt_execute($stmt)) {
+    include_once "../../helper/audit.php";
+    catatAuditLog($conn, $user_id, 'Ubah Password', 'Pengguna berhasil memperbarui kata sandi akun');
     header('Location: index.php?pesan=password_berhasil');
 } else {
     header('Location: index.php?pesan=password_gagal');

@@ -1,7 +1,7 @@
 <?php
 session_start();
 include "../../config/database.php";
-// Contoh penggunaan: $result = mysqli_query($conn, "SELECT * FROM table_name");
+include "../../helper/format.php";
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php?pesan=belum_login');
@@ -12,6 +12,54 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     header('Location: /login.php?pesan=akses_ditolak');
     exit;
 }
+
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'semua';
+$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+$where_clauses = [];
+
+// Filter pencarian
+if (!empty($search_query)) {
+    $search_escaped = mysqli_real_escape_string($conn, $search_query);
+    $where_clauses[] = "(u.nama_lengkap LIKE '%$search_escaped%' OR u.email LIKE '%$search_escaped%' OR a.aktivitas LIKE '%$search_escaped%' OR a.deskripsi LIKE '%$search_escaped%')";
+}
+
+// Filter jenis aktivitas tab
+switch ($active_tab) {
+    case 'login':
+        $where_clauses[] = "a.aktivitas IN ('Login', 'Logout')";
+        break;
+    case 'password':
+        $where_clauses[] = "a.aktivitas = 'Ubah Password'";
+        break;
+    case 'setor':
+        $where_clauses[] = "(a.aktivitas LIKE '%Setor%' OR a.aktivitas = 'SETOR')";
+        break;
+    case 'tarik':
+        $where_clauses[] = "(a.aktivitas LIKE '%Tarik%' OR a.aktivitas = 'TARIK')";
+        break;
+    case 'transfer':
+        $where_clauses[] = "(a.aktivitas LIKE '%Transfer%' OR a.aktivitas LIKE 'TRANSFER%')";
+        break;
+    case 'topup':
+        $where_clauses[] = "(a.aktivitas LIKE '%Top Up%' OR a.aktivitas LIKE '%Topup%' OR a.aktivitas LIKE 'TOPUP%')";
+        break;
+}
+
+$where_sql = "";
+if (count($where_clauses) > 0) {
+    $where_sql = "WHERE " . implode(" AND ", $where_clauses);
+}
+
+// Fetch Log sesuai filter
+$query_logs = "SELECT a.*, u.nama_lengkap, u.email, r.nama_role
+               FROM audit_log a
+               JOIN users u ON a.user_id = u.id
+               JOIN roles r ON u.role_id = r.id
+               $where_sql
+               ORDER BY a.created_at DESC";
+$logs_result = mysqli_query($conn, $query_logs);
+
 ?>
 
 <!DOCTYPE html>
@@ -37,64 +85,34 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-
             <a class="navbar-brand fw-bold" href="#">
                 Bank Multimedia
             </a>
-
-            <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarAdmin">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarAdmin">
-
                 <ul class="navbar-nav me-auto">
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../dashboard/index.php">
-                            Dashboard
-                        </a>
+                        <a class="nav-link" href="../dashboard/index.php">Dashboard</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../nasabah/index.php">
-                            Nasabah
-                        </a>
+                        <a class="nav-link" href="../nasabah/index.php">Nasabah</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../rekening/index.php">
-                            Rekening
-                        </a>
+                        <a class="nav-link" href="../rekening/index.php">Rekening</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../aktivitas/index.php">
-                            Aktivitas
-                        </a>
+                        <a class="nav-link" href="../aktivitas/index.php">Aktivitas</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link active"
-                            href="../logs/index.php">
-                            Logs
-                        </a>
+                        <a class="nav-link active" href="../logs/index.php">Logs</a>
                     </li>
-
                 </ul>
-
-                <a href="../../logout.php"
-                    class="btn btn-light btn-sm">
+                <a href="../../logout.php" class="btn btn-light btn-sm">
                     Logout
                 </a>
-
             </div>
         </div>
     </nav>
@@ -102,23 +120,149 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     <!-- HEADER -->
     <header class="hero py-5 shadow-sm">
         <div class="container">
-
-            <h1 class="display-6 fw-bold">
-                Audit Logs
-            </h1>
-
-            <p class="mb-0 opacity-75">
-                Riwayat log sistem untuk keperluan audit dan keamanan.
-            </p>
-
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-6 fw-bold">Audit Logs</h1>
+                    <p class="mb-0 opacity-75">Riwayat log sistem untuk keperluan audit dan keamanan.</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="btn-group">
+                        <a href="ekspor.php?type=<?= htmlspecialchars($active_tab) ?>&search=<?= urlencode($search_query) ?>" id="btn-export" class="btn btn-light btn-sm fw-semibold">
+                            Ekspor CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Workspace -->
+    <!-- Main Workspace -->
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container py-4">
 
-            <!-- Workspace -->
+            <!-- Filter & Search Bar -->
+            <div class="card p-3 mb-4">
+                <form method="GET" action="index.php" class="row g-3 align-items-center">
+                    <input type="hidden" name="tab" id="active-tab-input" value="<?= htmlspecialchars($active_tab); ?>">
+                    <div class="col-md-9">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Cari berdasarkan nama, email, aktivitas, atau deskripsi..." value="<?= htmlspecialchars($search_query); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary fw-semibold">
+                            Cari Log
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab & Table Card -->
+            <div class="card p-4">
+                
+                <!-- Tab Menu -->
+                <ul class="nav nav-tabs mb-4" id="logTab">
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'semua' ? 'active' : '' ?>" href="index.php?tab=semua&search=<?= urlencode($search_query) ?>">
+                            Semua
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'login' ? 'active' : '' ?>" href="index.php?tab=login&search=<?= urlencode($search_query) ?>">
+                            Login & Logout
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'password' ? 'active' : '' ?>" href="index.php?tab=password&search=<?= urlencode($search_query) ?>">
+                            Ubah Password
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'setor' ? 'active' : '' ?>" href="index.php?tab=setor&search=<?= urlencode($search_query) ?>">
+                            Setor Dana
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'tarik' ? 'active' : '' ?>" href="index.php?tab=tarik&search=<?= urlencode($search_query) ?>">
+                            Tarik Dana
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'transfer' ? 'active' : '' ?>" href="index.php?tab=transfer&search=<?= urlencode($search_query) ?>">
+                            Transfer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'topup' ? 'active' : '' ?>" href="index.php?tab=topup&search=<?= urlencode($search_query) ?>">
+                            Top Up E-Wallet
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Table Content -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal & Waktu</th>
+                                <th>Pengguna</th>
+                                <th>Role</th>
+                                <th>Aktivitas</th>
+                                <th>Deskripsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (mysqli_num_rows($logs_result) > 0): ?>
+                                <?php 
+                                $no = 1;
+                                while ($row = mysqli_fetch_assoc($logs_result)): 
+                                    $badge_class = 'bg-secondary';
+                                    $act = $row['aktivitas'];
+                                    
+                                    if ($act === 'Login' || $act === 'Logout') {
+                                        $badge_class = 'bg-info text-dark';
+                                    } elseif ($act === 'Ubah Password') {
+                                        $badge_class = 'bg-warning text-dark';
+                                    } elseif (strpos($act, 'Setor') !== false || $act === 'SETOR') {
+                                        $badge_class = 'bg-success';
+                                    } elseif (strpos($act, 'Tarik') !== false || $act === 'TARIK') {
+                                        $badge_class = 'bg-danger';
+                                    } elseif (strpos($act, 'Transfer') !== false || strpos($act, 'TRANSFER') !== false) {
+                                        $badge_class = 'bg-primary';
+                                    } elseif (strpos($act, 'Top Up') !== false || strpos($act, 'Topup') !== false || strpos($act, 'TOPUP') !== false) {
+                                        $badge_class = 'bg-dark';
+                                    }
+                                ?>
+                                    <tr>
+                                        <td><?= $no++; ?></td>
+                                        <td><small class="text-muted"><?= date('d-m-y H:i:s', strtotime($row['created_at'])); ?></small></td>
+                                        <td>
+                                            <div class="fw-semibold text-dark"><?= htmlspecialchars($row['nama_lengkap']); ?></div>
+                                            <small class="text-muted"><code><?= htmlspecialchars($row['email']); ?></code></small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border"><?= htmlspecialchars($row['nama_role']); ?></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge <?= $badge_class; ?> px-2 py-1"><?= htmlspecialchars($act); ?></span>
+                                        </td>
+                                        <td><span class="text-muted small"><?= htmlspecialchars($row['deskripsi']); ?></span></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        Tidak ada audit log yang cocok dengan filter aktif.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
 
         </div>
     </main>
@@ -126,14 +270,14 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     <!-- Footer -->
     <footer class="bg-light border-top py-3">
         <div class="container-fluid text-center">
-            <small>
-                © <?= date('Y'); ?> Bank Multimedia
+            <small class="text-muted">
+                © <?= date('Y'); ?> Bank Multimedia | Kelompok 3 - Sistem Multimedia
             </small>
         </div>
     </footer>
 
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 
 </html>

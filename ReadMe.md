@@ -66,7 +66,7 @@ Selain fungsi perbankan, proyek ini juga mengimplementasikan materi Sistem Multi
 3. Import file `database.sql` yang berada di root folder proyek ini ke dalam database `ta_perbankan`.
 
 ## 2. Konfigurasi Aplikasi
-1. Salin file `config/example.database.php` dan beri nama baru `config/database.php`.
+1. Salin file `config/database.example.php` dan beri nama baru `config/database.php`.
 2. Buka `config/database.php` dan sesuaikan kredensial database Anda:
    ```php
    $host = 'localhost';
