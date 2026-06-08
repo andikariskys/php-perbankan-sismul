@@ -170,7 +170,7 @@ $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
     <header class="hero py-5 shadow-sm">
         <div class="container">
             <h1 class="display-6 fw-bold">
-                <i class="fas fa-money-bill-wave me-2"></i>Setor Dana
+                Setor Dana
             </h1>
             <p class="mb-0 opacity-75">
                 Ajukan setor dana ke rekening Anda melalui merchant yang tersedia.
@@ -235,7 +235,7 @@ $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-warning text-dark">
                             <h5 class="mb-0 fw-bold">
-                                <i class="fas fa-hand-holding-usd me-2"></i>Form Setor Dana
+                                Form Setor Dana
                             </h5>
                         </div>
                         <div class="card-body">
@@ -287,7 +287,7 @@ $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
 
                                     <!-- Tombol Submit -->
                                     <button type="submit" class="btn btn-warning w-100 fw-bold">
-                                        <i class="fas fa-money-bill-wave me-2"></i>Setor Dana
+                                        Setor Dana
                                     </button>
 
                                 </form>
