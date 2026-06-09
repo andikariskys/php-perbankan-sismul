@@ -2,6 +2,7 @@
 session_start();
 include "../../config/database.php";
 include "../../helper/encryption.php";
+
 include "../../helper/audit.php";
 include "../../helper/format.php";
 
@@ -169,7 +170,7 @@ try {
     $judul_penerima = 'Transfer Masuk Diterima';
     $pesan_penerima = 'Anda menerima transfer sebesar ' . formatCurrency($nominal) . ' dari rekening ' . $nomor_pengirim . '.';
     tambahNotifikasi($conn, (int)$rekening_tujuan['user_id'], $judul_penerima, $pesan_penerima);
-
+  
     mysqli_commit($conn);
 
     header('Location: cetak_resi.php?id=' . $transfer_id);
