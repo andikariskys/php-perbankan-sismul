@@ -1,6 +1,8 @@
 <?php
 session_start();
 include "../../config/database.php";
+include "../../helper/audit.php";
+include "../../helper/format.php";
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../login.php?pesan=belum_login');
@@ -140,6 +142,11 @@ try {
     $stmt_audit = mysqli_prepare($conn, $query_audit);
     mysqli_stmt_bind_param($stmt_audit, "iss", $user_id, $aktivitas, $deskripsi);
     mysqli_stmt_execute($stmt_audit);
+
+    // kirim notif ke pengguna
+    $judul_notif = "Top Up " . $nama_provider . " Berhasil";
+    $pesan_notif = "Top up sebesar " . formatCurrency($nominal) . " ke nomor " . $nomor_tujuan . " berhasil dilakukan.";
+    tambahNotifikasi($conn, $user_id, $judul_notif, $pesan_notif);
 
     mysqli_commit($conn);
 
