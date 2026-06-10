@@ -1,17 +1,23 @@
 <?php
 session_start();
 include '../../config/database.php';
-// Contoh penggunaan: $result = mysqli_query($conn, "SELECT * FROM table_name");
+include '../helpers/admin_auth.php';
+include '../models/DashboardModel.php';
+include '../../helper/format.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /login.php?pesan=belum_login');
-    exit;
-}
+adminGuard();
 
-if ($_SESSION['nama_role'] !== 'Admin') {
-    header('Location: /login.php?pesan=akses_ditolak');
-    exit;
-}
+// Catat audit log: admin melihat dashboard
+catatAuditAdmin($conn, $_SESSION['user_id'], $_SESSION['user_id'], 'Lihat Dashboard', 'Admin mengakses halaman dashboard');
+
+// Ambil data realtime dari database
+$total_nasabah    = getTotalNasabah($conn);
+$total_rekening   = getTotalRekening($conn);
+$total_transaksi  = getTotalTransaksi($conn);
+$total_saldo      = getTotalSaldo($conn);
+$akun_aktif       = getJumlahAkunAktif($conn);
+$akun_pending     = getJumlahAkunPending($conn);
+$aktivitas_recent = getAktivitasTerbaru($conn, 10);
 ?>
 
 <!DOCTYPE html>
@@ -118,7 +124,149 @@ if ($_SESSION['nama_role'] !== 'Admin') {
     <main class="flex-grow-1">
         <div class="container-fluid py-4">
 
-            <!-- Workspace -->
+            <!-- Statistik Cards Row 1 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-users fa-lg text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Total Nasabah</div>
+                                <div class="fw-bold fs-4"><?= number_format($total_nasabah); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-credit-card fa-lg text-success"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Total Rekening</div>
+                                <div class="fw-bold fs-4"><?= number_format($total_rekening); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-exchange-alt fa-lg text-info"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Total Transaksi</div>
+                                <div class="fw-bold fs-4"><?= number_format($total_transaksi); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-wallet fa-lg text-warning"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Total Saldo</div>
+                                <div class="fw-bold fs-5"><?= formatCurrency($total_saldo); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistik Cards Row 2 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-check-circle fa-lg text-success"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Akun Aktif</div>
+                                <div class="fw-bold fs-4"><?= number_format($akun_aktif); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-clock fa-lg text-danger"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Pending Verifikasi</div>
+                                <div class="fw-bold fs-4"><?= number_format($akun_pending); ?></div>
+                            </div>
+                            <?php if ($akun_pending > 0): ?>
+                                <a href="../nasabah/index.php?filter=Pending" class="btn btn-outline-danger btn-sm ms-auto">Verifikasi</a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aktivitas Terbaru -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-semibold"><i class="fas fa-clock-rotate-left me-2 text-primary"></i>Aktivitas Terbaru Nasabah</h6>
+                    <a href="../logs/index.php" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Pengguna</th>
+                                    <th>Aktivitas</th>
+                                    <th>Deskripsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($aktivitas_recent)): ?>
+                                    <?php foreach ($aktivitas_recent as $act): ?>
+                                        <?php
+                                        $badge_class = 'bg-secondary';
+                                        $a = $act['aktivitas'];
+                                        if ($a === 'Login' || $a === 'Logout') $badge_class = 'bg-info text-dark';
+                                        elseif (strpos($a, 'Password') !== false) $badge_class = 'bg-warning text-dark';
+                                        elseif (strpos($a, 'Setor') !== false || $a === 'SETOR') $badge_class = 'bg-success';
+                                        elseif (strpos($a, 'Tarik') !== false || $a === 'TARIK') $badge_class = 'bg-danger';
+                                        elseif (strpos($a, 'Transfer') !== false) $badge_class = 'bg-primary';
+                                        elseif (strpos($a, 'Top Up') !== false || strpos($a, 'Topup') !== false || strpos($a, 'TOPUP') !== false) $badge_class = 'bg-dark';
+                                        elseif (strpos($a, 'Verifikasi') !== false) $badge_class = 'bg-success';
+                                        elseif (strpos($a, 'Aktivasi') !== false) $badge_class = 'bg-success';
+                                        elseif (strpos($a, 'Nonaktif') !== false) $badge_class = 'bg-danger';
+                                        elseif (strpos($a, 'Reset') !== false) $badge_class = 'bg-warning text-dark';
+                                        ?>
+                                        <tr>
+                                            <td><small class="text-muted"><?= date('d-m-y H:i', strtotime($act['created_at'])); ?></small></td>
+                                            <td>
+                                                <div class="fw-semibold"><?= htmlspecialchars($act['nama_lengkap']); ?></div>
+                                                <small class="text-muted"><?= htmlspecialchars($act['email']); ?></small>
+                                            </td>
+                                            <td><span class="badge <?= $badge_class; ?> px-2 py-1"><?= htmlspecialchars($a); ?></span></td>
+                                            <td><small class="text-muted"><?= htmlspecialchars($act['deskripsi'] ?? '-'); ?></small></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">Belum ada aktivitas tercatat.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </main>

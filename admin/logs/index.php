@@ -1,27 +1,32 @@
 <?php
 session_start();
 include "../../config/database.php";
+
 include "../../helper/format.php";
+include "../helpers/admin_auth.php";
+include "../helpers/pagination.php";
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /login.php?pesan=belum_login');
-    exit;
-}
-
-if ($_SESSION['nama_role'] !== 'Admin') {
-    header('Location: /login.php?pesan=akses_ditolak');
-    exit;
-}
+adminGuard();
 
 $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'semua';
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+$per_page = 20;
+$offset = ($page - 1) * $per_page;
 
 $where_clauses = [];
+$params = [];
+$types = '';
 
 // Filter pencarian
 if (!empty($search_query)) {
-    $search_escaped = mysqli_real_escape_string($conn, $search_query);
-    $where_clauses[] = "(u.nama_lengkap LIKE '%$search_escaped%' OR u.email LIKE '%$search_escaped%' OR a.aktivitas LIKE '%$search_escaped%' OR a.deskripsi LIKE '%$search_escaped%')";
+    $search_like = "%{$search_query}%";
+    $where_clauses[] = "(u.nama_lengkap LIKE ? OR u.email LIKE ? OR a.aktivitas LIKE ? OR a.deskripsi LIKE ?)";
+    $params[] = $search_like;
+    $params[] = $search_like;
+    $params[] = $search_like;
+    $params[] = $search_like;
+    $types .= 'ssss';
 }
 
 // Filter jenis aktivitas tab
@@ -30,7 +35,7 @@ switch ($active_tab) {
         $where_clauses[] = "a.aktivitas IN ('Login', 'Logout')";
         break;
     case 'password':
-        $where_clauses[] = "a.aktivitas = 'Ubah Password'";
+        $where_clauses[] = "(a.aktivitas = 'Ubah Password' OR a.aktivitas LIKE '%Reset Password%')";
         break;
     case 'setor':
         $where_clauses[] = "(a.aktivitas LIKE '%Setor%' OR a.aktivitas = 'SETOR')";
@@ -44,6 +49,9 @@ switch ($active_tab) {
     case 'topup':
         $where_clauses[] = "(a.aktivitas LIKE '%Top Up%' OR a.aktivitas LIKE '%Topup%' OR a.aktivitas LIKE 'TOPUP%')";
         break;
+    case 'admin':
+        $where_clauses[] = "(a.aktivitas LIKE '%Verifikasi%' OR a.aktivitas LIKE '%Aktivasi%' OR a.aktivitas LIKE '%Nonaktif%' OR a.aktivitas LIKE '%Reset Password%' OR a.aktivitas LIKE '%Lihat%')";
+        break;
 }
 
 $where_sql = "";
@@ -51,14 +59,33 @@ if (count($where_clauses) > 0) {
     $where_sql = "WHERE " . implode(" AND ", $where_clauses);
 }
 
-// Fetch Log sesuai filter
+// Count total rows
+$count_sql = "SELECT COUNT(*) AS total FROM audit_log a JOIN users u ON a.user_id = u.id $where_sql";
+$stmt = mysqli_prepare($conn, $count_sql);
+if (!empty($params)) {
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+}
+mysqli_stmt_execute($stmt);
+$total_rows = (int) mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['total'];
+mysqli_stmt_close($stmt);
+
 $query_logs = "SELECT a.*, u.nama_lengkap, u.email, r.nama_role
                FROM audit_log a
                JOIN users u ON a.user_id = u.id
                JOIN roles r ON u.role_id = r.id
                $where_sql
-               ORDER BY a.created_at DESC";
-$logs_result = mysqli_query($conn, $query_logs);
+               ORDER BY a.created_at DESC
+               LIMIT ? OFFSET ?";
+$params[] = $per_page;
+$params[] = $offset;
+$types .= 'ii';
+
+$stmt = mysqli_prepare($conn, $query_logs);
+mysqli_stmt_bind_param($stmt, $types, ...$params);
+mysqli_stmt_execute($stmt);
+$logs_result = mysqli_stmt_get_result($stmt);
+
+$base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($search_query) . "&";
 
 ?>
 
@@ -198,6 +225,11 @@ $logs_result = mysqli_query($conn, $query_logs);
                             Top Up E-Wallet
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active_tab === 'admin' ? 'active' : '' ?>" href="index.php?tab=admin&search=<?= urlencode($search_query) ?>">
+                            Admin
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Table Content -->
@@ -216,14 +248,15 @@ $logs_result = mysqli_query($conn, $query_logs);
                         <tbody>
                             <?php if (mysqli_num_rows($logs_result) > 0): ?>
                                 <?php 
-                                $no = 1;
+
+                                $no = ($page - 1) * $per_page + 1;
                                 while ($row = mysqli_fetch_assoc($logs_result)): 
                                     $badge_class = 'bg-secondary';
                                     $act = $row['aktivitas'];
                                     
                                     if ($act === 'Login' || $act === 'Logout') {
                                         $badge_class = 'bg-info text-dark';
-                                    } elseif ($act === 'Ubah Password') {
+                                    } elseif ($act === 'Ubah Password' || strpos($act, 'Reset Password') !== false) {
                                         $badge_class = 'bg-warning text-dark';
                                     } elseif (strpos($act, 'Setor') !== false || $act === 'SETOR') {
                                         $badge_class = 'bg-success';
@@ -233,6 +266,12 @@ $logs_result = mysqli_query($conn, $query_logs);
                                         $badge_class = 'bg-primary';
                                     } elseif (strpos($act, 'Top Up') !== false || strpos($act, 'Topup') !== false || strpos($act, 'TOPUP') !== false) {
                                         $badge_class = 'bg-dark';
+                                    } elseif (strpos($act, 'Verifikasi') !== false || strpos($act, 'Aktivasi') !== false) {
+                                        $badge_class = 'bg-success';
+                                    } elseif (strpos($act, 'Nonaktif') !== false) {
+                                        $badge_class = 'bg-danger';
+                                    } elseif (strpos($act, 'Lihat') !== false) {
+                                        $badge_class = 'bg-secondary';
                                     }
                                 ?>
                                     <tr>
@@ -262,7 +301,15 @@ $logs_result = mysqli_query($conn, $query_logs);
                     </table>
                 </div>
 
+                <!-- Pagination -->
+                <?php if ($total_rows > $per_page): ?>
+                    <div class="mt-3">
+                        <?php renderPagination($total_rows, $per_page, $page, $base_url); ?>
+                    </div>
+                <?php endif; ?>
+
             </div>
+
 
         </div>
     </main>
