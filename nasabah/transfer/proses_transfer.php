@@ -3,6 +3,9 @@ session_start();
 include "../../config/database.php";
 include "../../helper/encryption.php";
 
+include "../../helper/audit.php";
+include "../../helper/format.php";
+
 /** @var mysqli $conn */
 
 if (!isset($_SESSION['user_id'])) {
@@ -157,6 +160,17 @@ try {
         throw new Exception('Gagal menyimpan audit log');
     }
 
+    // notif ke pengirim
+    $nomor_pengirim = decrypt($rekening_pengirim['nomor_rekening_encrypted']);
+    $judul_pengirim = 'Transfer Keluar Berhasil';
+    $pesan_pengirim = 'Transfer sebesar ' . formatCurrency($nominal) . ' ke rekening ' . $nomor_rekening_tujuan . ' berhasil.';
+    tambahNotifikasi($conn, $user_id, $judul_pengirim, $pesan_pengirim);
+
+    // notif ke penerima
+    $judul_penerima = 'Transfer Masuk Diterima';
+    $pesan_penerima = 'Anda menerima transfer sebesar ' . formatCurrency($nominal) . ' dari rekening ' . $nomor_pengirim . '.';
+    tambahNotifikasi($conn, (int)$rekening_tujuan['user_id'], $judul_penerima, $pesan_penerima);
+  
     mysqli_commit($conn);
 
     header('Location: cetak_resi.php?id=' . $transfer_id);

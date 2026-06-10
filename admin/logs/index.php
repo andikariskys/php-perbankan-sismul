@@ -69,7 +69,6 @@ mysqli_stmt_execute($stmt);
 $total_rows = (int) mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['total'];
 mysqli_stmt_close($stmt);
 
-// Fetch logs with pagination
 $query_logs = "SELECT a.*, u.nama_lengkap, u.email, r.nama_role
                FROM audit_log a
                JOIN users u ON a.user_id = u.id
@@ -87,7 +86,6 @@ mysqli_stmt_execute($stmt);
 $logs_result = mysqli_stmt_get_result($stmt);
 
 $base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($search_query) . "&";
-
 
 ?>
 
@@ -114,64 +112,34 @@ $base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-
             <a class="navbar-brand fw-bold" href="#">
                 Bank Multimedia
             </a>
-
-            <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarAdmin">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarAdmin">
-
                 <ul class="navbar-nav me-auto">
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../dashboard/index.php">
-                            Dashboard
-                        </a>
+                        <a class="nav-link" href="../dashboard/index.php">Dashboard</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../nasabah/index.php">
-                            Nasabah
-                        </a>
+                        <a class="nav-link" href="../nasabah/index.php">Nasabah</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../rekening/index.php">
-                            Rekening
-                        </a>
+                        <a class="nav-link" href="../rekening/index.php">Rekening</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link"
-                            href="../aktivitas/index.php">
-                            Aktivitas
-                        </a>
+                        <a class="nav-link" href="../aktivitas/index.php">Aktivitas</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link active"
-                            href="../logs/index.php">
-                            Logs
-                        </a>
+                        <a class="nav-link active" href="../logs/index.php">Logs</a>
                     </li>
-
                 </ul>
-
-                <a href="../../logout.php"
-                    class="btn btn-light btn-sm">
+                <a href="../../logout.php" class="btn btn-light btn-sm">
                     Logout
                 </a>
-
             </div>
         </div>
     </nav>
@@ -179,22 +147,25 @@ $base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($
     <!-- HEADER -->
     <header class="hero py-5 shadow-sm">
         <div class="container">
-
-            <h1 class="display-6 fw-bold">
-                Audit Logs
-            </h1>
-
-            <p class="mb-0 opacity-75">
-                Riwayat log sistem untuk keperluan audit dan keamanan.
-            </p>
-
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-6 fw-bold">Audit Logs</h1>
+                    <p class="mb-0 opacity-75">Riwayat log sistem untuk keperluan audit dan keamanan.</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="btn-group">
+                        <a href="ekspor.php?type=<?= htmlspecialchars($active_tab) ?>&search=<?= urlencode($search_query) ?>" id="btn-export" class="btn btn-light btn-sm fw-semibold">
+                            Ekspor CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Workspace -->
+    <!-- Main Workspace -->
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
-
+        <div class="container py-4">
 
             <!-- Filter & Search Bar -->
             <div class="card p-3 mb-4">
@@ -277,6 +248,7 @@ $base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($
                         <tbody>
                             <?php if (mysqli_num_rows($logs_result) > 0): ?>
                                 <?php 
+
                                 $no = ($page - 1) * $per_page + 1;
                                 while ($row = mysqli_fetch_assoc($logs_result)): 
                                     $badge_class = 'bg-secondary';
@@ -345,14 +317,14 @@ $base_url = "index.php?tab=" . urlencode($active_tab) . "&search=" . urlencode($
     <!-- Footer -->
     <footer class="bg-light border-top py-3">
         <div class="container-fluid text-center">
-            <small>
-                © <?= date('Y'); ?> Bank Multimedia
+            <small class="text-muted">
+                © <?= date('Y'); ?> Bank Multimedia | Kelompok 3 - Sistem Multimedia
             </small>
         </div>
     </footer>
 
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 
 </html>

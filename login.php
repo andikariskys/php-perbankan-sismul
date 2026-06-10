@@ -32,6 +32,11 @@ if (isset($_POST['login_submit'])) {
 
                 // Log login
                 mysqli_query($conn, "INSERT INTO login_log (user_id) VALUES ({$user['id']})");
+                $_SESSION['login_log_id'] = mysqli_insert_id($conn);
+
+                // Catat audit log
+                include_once 'helper/audit.php';
+                catatAuditLog($conn, $user['id'], 'Login', 'Pengguna dengan role ' . $user['nama_role'] . ' berhasil masuk ke sistem');
 
                 if ($user['nama_role'] == 'Admin') {
                     header('Location: admin/dashboard/index.php');

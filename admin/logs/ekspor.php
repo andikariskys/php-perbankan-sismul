@@ -9,6 +9,7 @@ $type = isset($_GET['type']) ? $_GET['type'] : 'semua';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 $where_clauses = [];
+
 $params = [];
 $types = '';
 
@@ -51,6 +52,7 @@ if (count($where_clauses) > 0) {
     $where_sql = "WHERE " . implode(" AND ", $where_clauses);
 }
 
+
 // Catat audit: admin mengekspor log
 catatAuditAdmin($conn, $_SESSION['user_id'], $_SESSION['user_id'], 'Ekspor Log', "Admin mengekspor audit log dengan filter: $type");
 
@@ -88,6 +90,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         $row['deskripsi']
     ]);
 }
+
 mysqli_stmt_close($stmt);
 
 fclose($output);

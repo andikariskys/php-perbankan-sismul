@@ -238,7 +238,7 @@ session_start();
             </div>
             <hr class="my-4 bg-secondary">
             <div class="text-center text-secondary">
-                <p>&copy; 2024 Bank Sismul. All rights reserved. Kelompok 3 - Sistem Multimedia.</p>
+                <p>&copy; <?= date('Y'); ?> Bank Sismul. All rights reserved. Kelompok 3 - Sistem Multimedia.</p>
             </div>
         </div>
     </footer>
