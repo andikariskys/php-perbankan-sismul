@@ -27,6 +27,20 @@ if (isset($_POST['request_rekening'])) {
     $user_id = $_SESSION['user_id'];
     $jenis_rekening = htmlspecialchars(trim($_POST['jenis_rekening']));
 
+    // Cek jumlah rekening yang sudah ada (Limit Maksimal 2)
+    $check_query = "SELECT COUNT(*) as total FROM rekening WHERE user_id = ?";
+    $stmt_check = mysqli_prepare($conn, $check_query);
+    mysqli_stmt_bind_param($stmt_check, "i", $user_id);
+    mysqli_stmt_execute($stmt_check);
+    $result_check = mysqli_stmt_get_result($stmt_check);
+    $data_check = mysqli_fetch_assoc($result_check);
+    mysqli_stmt_close($stmt_check);
+
+    if ($data_check['total'] >= 2) {
+        header('Location: index.php?pesan=limit_tercapai');
+        exit;
+    }
+
     // Validasi jenis_rekening agar sesuai dengan ENUM database ('Tabungan', 'Giro')
     if ($jenis_rekening !== 'Tabungan' && $jenis_rekening !== 'Giro') {
         $jenis_rekening = 'Tabungan';

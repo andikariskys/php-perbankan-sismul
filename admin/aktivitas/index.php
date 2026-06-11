@@ -134,7 +134,7 @@ $base_url = "index.php?search=" . urlencode($search)
 
     <!-- Workspace -->
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container">
 
             <!-- Search & Filter -->
             <div class="card border-0 shadow-sm p-3 mb-4">

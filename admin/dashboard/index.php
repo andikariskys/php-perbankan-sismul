@@ -42,7 +42,7 @@ $aktivitas_recent = getAktivitasTerbaru($conn, 10);
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+        <div class="container">
 
             <a class="navbar-brand fw-bold" href="#">
                 Bank Multimedia
@@ -122,7 +122,7 @@ $aktivitas_recent = getAktivitasTerbaru($conn, 10);
 
     <!-- Workspace -->
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container py-4">
 
             <!-- Statistik Cards Row 1 -->
             <div class="row g-3 mb-4">
@@ -273,7 +273,7 @@ $aktivitas_recent = getAktivitasTerbaru($conn, 10);
 
     <!-- Footer -->
     <footer class="bg-light border-top py-3">
-        <div class="container-fluid text-center">
+        <div class="container text-center">
             <small>
                 © <?= date('Y'); ?> Bank Multimedia
             </small>

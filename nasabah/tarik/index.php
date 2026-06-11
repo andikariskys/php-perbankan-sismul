@@ -80,7 +80,7 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
     </header>
 
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container py-4">
 
             <div class="row">
                 <div class="col-lg-4 mb-4">
@@ -199,7 +199,7 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
     </main>
 
     <footer class="bg-light border-top py-3 mt-auto">
-        <div class="container-fluid text-center">
+        <div class="container text-center">
             <small class="text-muted">
                 © <?= date('Y'); ?> Bank Multimedia - Kelompok 3
             </small>

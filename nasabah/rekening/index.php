@@ -144,23 +144,30 @@ $jumlah_rekening = mysqli_num_rows($rekening_query);
     </header>
 
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container py-4">
             
-            <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'sukses_buat'): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>Aktivasi Berhasil!</strong> Rekening baru Anda telah berhasil didaftarkan dan aktif.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php elseif (isset($_GET['pesan']) && $_GET['pesan'] == 'gagal_buat'): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Gagal!</strong> Terjadi kesalahan saat memproses pembuatan rekening baru. Silakan coba lagi.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <?php if (isset($_GET['pesan'])): ?>
+                <?php if ($_GET['pesan'] == 'sukses_buat'): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Aktivasi Berhasil!</strong> Rekening baru Anda telah berhasil didaftarkan dan aktif.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php elseif ($_GET['pesan'] == 'gagal_buat'): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Gagal!</strong> Terjadi kesalahan saat memproses pembuatan rekening baru. Silakan coba lagi.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php elseif ($_GET['pesan'] == 'limit_tercapai'): ?>
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Limit Tercapai!</strong> Anda sudah memiliki batas maksimal (2) rekening aktif.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php
             if ($jumlah_rekening > 0) {
-                echo '<div class="row justify-content-center">';
+                echo '<div class="row justify-content-center mb-5">';
                 while ($row = mysqli_fetch_assoc($rekening_query)) {
                     
                     // DEKRIPSI DATA AMAN SENSITIF DISINI
@@ -203,10 +210,11 @@ $jumlah_rekening = mysqli_num_rows($rekening_query);
                     </div>';
                 }
                 echo '</div>';
+            }
 
-            } else {
+            if ($jumlah_rekening < 2) {
                 // -----------------------------------------------------------------
-                // KONDISI B: JIKA BELUM PUNYA REKENING -> TAMPILKAN FORM REGISTRASI
+                // TAMPILKAN FORM REGISTRASI JIKA JUMLAH REKENING < 2
                 // -----------------------------------------------------------------
                 echo '
                 <div class="row justify-content-center">
@@ -216,8 +224,8 @@ $jumlah_rekening = mysqli_num_rows($rekening_query);
                                 <div class="icon-box bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                                     <i class="fa-solid fa-wallet fs-3"></i>
                                 </div>
-                                <h4 class="fw-bold text-dark mb-1">Buka Rekening Baru</h4>
-                                <p class="text-muted small mb-0">Halo ' . htmlspecialchars($nama_user) . ', Anda belum memiliki rekening terdaftar.</p>
+                                <h4 class="fw-bold text-dark mb-1">Buka Rekening ' . ($jumlah_rekening > 0 ? 'Tambahan' : 'Baru') . '</h4>
+                                <p class="text-muted small mb-0">Halo ' . htmlspecialchars($nama_user) . ', Anda ' . ($jumlah_rekening > 0 ? 'masih bisa memiliki 1 rekening lagi.' : 'belum memiliki rekening terdaftar.') . '</p>
                             </div>
                             <div class="card-body px-4 pb-4">
                                 <form action="proses_rekening.php" method="POST">
@@ -244,6 +252,17 @@ $jumlah_rekening = mysqli_num_rows($rekening_query);
                         </div>
                     </div>
                 </div>';
+            } else {
+                echo '
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="alert alert-info border-0 shadow-sm text-center py-4">
+                            <i class="fas fa-info-circle fs-3 mb-3 d-block text-primary"></i>
+                            <h5 class="fw-bold">Batas Rekening Maksimal</h5>
+                            <p class="mb-0 text-muted">Anda telah mencapai batas maksimal (2) rekening. Silakan hubungi customer service untuk informasi lebih lanjut.</p>
+                        </div>
+                    </div>
+                </div>';
             }
             ?>
 
@@ -252,7 +271,7 @@ $jumlah_rekening = mysqli_num_rows($rekening_query);
 
     <!-- Footer -->
     <footer class="bg-light border-top py-3">
-        <div class="container-fluid text-center">
+        <div class="container text-center">
             <small>
                 © <?= date('Y'); ?> Bank Multimedia
             </small>

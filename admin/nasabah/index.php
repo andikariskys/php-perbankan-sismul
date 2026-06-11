@@ -193,7 +193,7 @@ $base_url = "index.php?search=" . urlencode($search) . "&filter=" . urlencode($f
 
     <!-- Workspace -->
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container">
 
             <!-- Notifikasi -->
             <?php if (isset($_GET['pesan'])): ?>
