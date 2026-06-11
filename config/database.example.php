@@ -1,8 +1,8 @@
 <?php
-$host = 'localhost';
-$username = 'username';
-$password = 'password';
-$database = 'ta_perbankan';
+$host = 'host'; // ex. 'localhost'
+$username = 'username'; // ex. 'root'
+$password = 'password'; // ex. '12345678'
+$database = 'ta_perbankan'; // ex. 'ta_perbankan'
 
 try {
     $conn = mysqli_connect($host, $username, $password, $database);

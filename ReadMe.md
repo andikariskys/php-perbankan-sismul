@@ -1,7 +1,8 @@
 ## Informasi Mata Kuliah
 
 - **Mata Kuliah:** Sistem Multimedia
-- **Kelompok:** 3
+- **Group:** 2 (Media Transaksi Perbankan)
+- **Kelompok:** 2
 - **Aplikasi:** Aplikasi Perbankan Berbasis Web
 
 ## Anggota Kelompok
@@ -66,7 +67,7 @@ Selain fungsi perbankan, proyek ini juga mengimplementasikan materi Sistem Multi
 3. Import file `database.sql` yang berada di root folder proyek ini ke dalam database `ta_perbankan`.
 
 ## 2. Konfigurasi Aplikasi
-1. Salin file `config/example.database.php` dan beri nama baru `config/database.php`.
+1. Salin file `config/database.example.php` dan beri nama baru `config/database.php`.
 2. Buka `config/database.php` dan sesuaikan kredensial database Anda:
    ```php
    $host = 'localhost';
@@ -107,7 +108,40 @@ Selain fungsi perbankan, proyek ini juga mengimplementasikan materi Sistem Multi
    ```bash
    php -S localhost:8080
    ```
-4. Akses di browser: `http://localhost:8080`
+
+## 4. Mengaktifkan GD Library
+
+GD Library wajib diaktifkan agar fitur **kompresi dan unggah foto profil** dapat berjalan. Ikuti panduan di bawah ini sesuai dengan lingkungan server Anda:
+
+### A. Menggunakan XAMPP
+1. Buka **XAMPP Control Panel**.
+2. Klik tombol **Config** pada baris **Apache**, kemudian pilih **PHP (php.ini)**.
+3. Cari baris `;extension=gd` (gunakan `Ctrl + F`).
+4. Hapus tanda titik koma ( `;` ) di depannya sehingga menjadi:
+   ```ini
+   extension=gd
+   ```
+5. Simpan file tersebut (`Ctrl + S`).
+6. Lakukan **Restart Apache** (klik **Stop** lalu **Start** kembali di XAMPP Control Panel).
+
+### B. Menggunakan Laragon
+1. Klik kanan pada jendela utama Laragon atau ikon Laragon di taskbar.
+2. Arahkan kursor ke **PHP** -> **Extensions**.
+3. Cari dan klik pada pilihan **gd** agar tercentang.
+4. Laragon secara otomatis akan melakukan restart Apache, dan modul langsung aktif.
+
+### C. Menggunakan Linux (Ubuntu/Debian)
+1. Buka terminal Linux.
+2. Pasang modul GD sesuai dengan versi PHP yang Anda gunakan (contoh untuk PHP 8.x):
+   ```bash
+   sudo apt-get install php-gd
+   ```
+3. Restart web server Apache atau PHP-FPM Anda:
+   ```bash
+   sudo systemctl restart apache2
+   # atau jika menggunakan nginx
+   sudo systemctl restart php8.x-fpm
+   ```
 
 ---
 

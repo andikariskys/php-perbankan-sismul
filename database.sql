@@ -158,7 +158,7 @@ CREATE TABLE login_log (
 INSERT INTO login_log
 (user_id,login_at)
 VALUES
-(1,'2026-06-06 14:64:00'),
+(1,'2026-06-06 14:04:00'),
 (2,'2026-06-06 05:00:00');
 
 CREATE TABLE audit_log (
@@ -176,3 +176,22 @@ INSERT INTO audit_log
 (user_id,aktivitas,deskripsi)VALUES
 (1,'Login','Admin berhasil login ke sistem'),
 (2,'Transfer','Nasabah melakukan transfer ke rekening lain');
+
+-- notif utk track log
+CREATE TABLE notifikasi (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    judul VARCHAR(150) NOT NULL,
+    pesan TEXT NOT NULL,
+    status_baca ENUM('Belum Dibaca','Dibaca') DEFAULT 'Belum Dibaca',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+INSERT INTO notifikasi
+(user_id,judul,pesan)
+VALUES
+(2,'Transfer Berhasil','Transfer sebesar Rp100.000 ke rekening Budi Santoso berhasil.');
