@@ -1,7 +1,8 @@
 ## Informasi Mata Kuliah
 
 - **Mata Kuliah:** Sistem Multimedia
-- **Kelompok:** 3
+- **Group:** 2 (Media Transaksi Perbankan)
+- **Kelompok:** 2
 - **Aplikasi:** Aplikasi Perbankan Berbasis Web
 
 ## Anggota Kelompok
