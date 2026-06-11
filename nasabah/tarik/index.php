@@ -16,17 +16,19 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
 
 $user_id = $_SESSION['user_id'];
 
-// Ambil data rekening dari database
-$query_rekening = "SELECT id, nomor_rekening_encrypted, saldo FROM rekening WHERE user_id = ?";
+// Kueri Diubah: Ambil SEMUA rekening aktif milik nasabah
+$query_rekening = "SELECT id, nomor_rekening_encrypted, saldo, jenis_rekening FROM rekening WHERE user_id = ? AND status_rekening = 'Aktif'";
 $stmt = mysqli_prepare($conn, $query_rekening);
-mysqli_stmt_bind_param($stmt, "i", $user_id);
+mysqli_stmt_bind_param($stmt, "i", $user_id); 
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
-$rekening = mysqli_fetch_assoc($result);
 
-$rekening_id = $rekening['id'];
-// Menggunakan helper decrypt() dari Anggota 3
-$no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
+$daftar_rekening = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    // Dekripsi nomor rekening langsung saat pengambilan data
+    $row['nomor_rekening_asli'] = decrypt($row['nomor_rekening_encrypted']);
+    $daftar_rekening[] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -80,10 +82,10 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
     </header>
 
     <main class="flex-grow-1">
-        <div class="container py-4">
+        <div class="container-fluid py-4">
 
             <div class="row">
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-5 mb-4">
                     
                     <?php if(isset($_SESSION['pesan_error'])): ?>
                         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -101,17 +103,22 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
 
                     <div class="card shadow-sm mb-4 border-0">
                         <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                            <h5 class="fw-bold"><i class="fas fa-wallet text-success me-2"></i>Informasi Rekening</h5>
+                            <h5 class="fw-bold"><i class="fas fa-wallet text-success me-2"></i>Daftar Rekening Anda</h5>
                         </div>
                         <div class="card-body">
-                            <p class="text-muted mb-1 small">Nama Nasabah</p>
-                            <p class="fw-bold mb-3"><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></p>
-                            
-                            <p class="text-muted mb-1 small">Nomor Rekening</p>
-                            <p class="fw-bold mb-3"><?= htmlspecialchars($no_rekening_asli); ?></p>
-                            
-                            <p class="text-muted mb-1 small">Total Saldo Aktif</p>
-                            <h3 class="text-success fw-bold"><?= formatCurrency($rekening['saldo']); ?></h3>
+                            <p class="text-muted mb-2 small">Pemilik: <strong><?= htmlspecialchars($_SESSION['nama_lengkap']); ?></strong></p>
+                            <hr class="mt-0">
+                            <?php if(count($daftar_rekening) > 0): ?>
+                                <?php foreach($daftar_rekening as $rek): ?>
+                                    <div class="mb-3 p-2 border-start border-success border-3 bg-light rounded-end">
+                                        <span class="badge bg-secondary mb-1"><?= $rek['jenis_rekening']; ?></span>
+                                        <p class="fw-bold mb-0 text-dark"><?= htmlspecialchars($rek['nomor_rekening_asli']); ?></p>
+                                        <p class="text-success fw-bold mb-0 small">Saldo: <?= formatCurrency($rek['saldo']); ?></p>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="text-danger small mb-0">Anda tidak memiliki rekening aktif.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -122,15 +129,29 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
                         <div class="card-body">
                             <form action="proses_tarik.php" method="POST">
                                 <div class="mb-3">
+                                    <label for="rekening_id" class="form-label text-muted small">Pilih Rekening Sumber</label>
+                                    <select class="form-select form-select-lg" id="rekening_id" name="rekening_id" required>
+                                        <option value="" disabled selected>-- Pilih Rekening --</option>
+                                        <?php foreach($daftar_rekening as $rek): ?>
+                                            <option value="<?= $rek['id']; ?>">
+                                                <?= htmlspecialchars($rek['nomor_rekening_asli']); ?> (<?= $rek['jenis_rekening']; ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="nominal" class="form-label text-muted small">Nominal Tarik Tunai (Rp)</label>
                                     <input type="number" class="form-control form-control-lg" id="nominal" name="nominal" required min="10000" placeholder="Contoh: 50000">
                                     <small class="text-muted">Minimum penarikan Rp 10.000</small>
                                 </div>
+
                                 <div class="mb-4">
-                                    <label for="password" class="form-label text-muted small">Password Akun</label>
-                                    <input type="password" class="form-control form-control-lg" id="password" name="password" required placeholder="Masukkan password Anda">
+                                    <label for="password" class="form-label text-muted small">Password Konfirmasi</label>
+                                    <input type="password" class="form-control form-control-lg" id="password" name="password" required placeholder="Masukkan password akun Anda">
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" <?= count($daftar_rekening) === 0 ? 'disabled' : ''; ?>>
                                     <i class="fas fa-hand-holding-usd me-2"></i>Tarik Dana Sekarang
                                 </button>
                             </form>
@@ -138,9 +159,9 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
                     </div>
                 </div>
 
-                <div class="col-lg-8">
+                <div class="col-lg-7">
                     <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
                             <h5 class="fw-bold"><i class="fas fa-history text-secondary me-2"></i>Riwayat Tarik Tunai</h5>
                         </div>
                         <div class="card-body p-0 mt-3">
@@ -149,30 +170,39 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
                                     <thead class="table-light">
                                         <tr>
                                             <th>No</th>
+                                            <th>Rekening</th>
                                             <th>Waktu Transaksi</th>
                                             <th>Nominal</th>
-                                            <th>Sisa Saldo</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
                                         $jenis_tx = 'TARIK';
-                                        $query_riwayat = "SELECT id, nominal, saldo_sesudah, created_at FROM transaksi WHERE rekening_id = ? AND jenis_transaksi = ? ORDER BY created_at DESC";
+                                        // Kueri Diubah: Lakukan JOIN ke tabel rekening untuk memfilter berdasarkan user_id nasabah
+                                        $query_riwayat = "SELECT t.id, t.nominal, t.created_at, r.nomor_rekening_encrypted, r.jenis_rekening 
+                                                          FROM transaksi t 
+                                                          JOIN rekening r ON t.rekening_id = r.id 
+                                                          WHERE r.user_id = ? AND t.jenis_transaksi = ? 
+                                                          ORDER BY t.created_at DESC";
                                         $stmt_riwayat = mysqli_prepare($conn, $query_riwayat);
-                                        mysqli_stmt_bind_param($stmt_riwayat, "is", $rekening_id, $jenis_tx);
+                                        mysqli_stmt_bind_param($stmt_riwayat, "is", $user_id, $jenis_tx);
                                         mysqli_stmt_execute($stmt_riwayat);
                                         $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
                                         
                                         $no = 1;
                                         if(mysqli_num_rows($result_riwayat) > 0):
                                             while($row = mysqli_fetch_assoc($result_riwayat)):
+                                                $no_rek_riwayat = decrypt($row['nomor_rekening_encrypted']);
                                         ?>
                                         <tr>
                                             <td><?= $no++; ?></td>
+                                            <td>
+                                                <small class="fw-bold d-block"><?= htmlspecialchars($no_rek_riwayat); ?></small>
+                                                <span class="badge bg-light text-dark border style-sm" style="font-size: 10px;"><?= $row['jenis_rekening']; ?></span>
+                                            </td>
                                             <td><?= ucwords(formatDate($row['created_at'])) . date(', H:i', strtotime($row['created_at'])); ?></td>
                                             <td class="text-danger fw-bold">- <?= formatCurrency($row['nominal']); ?></td>
-                                            <td><?= formatCurrency($row['saldo_sesudah']); ?></td>
                                             <td>
                                                 <a href="cetak_resi.php?id=<?= $row['id']; ?>" target="_blank" class="btn btn-sm btn-outline-success">
                                                     <i class="fas fa-print"></i> Resi
@@ -199,15 +229,11 @@ $no_rekening_asli = decrypt($rekening['nomor_rekening_encrypted']);
     </main>
 
     <footer class="bg-light border-top py-3 mt-auto">
-        <div class="container text-center">
-            <small class="text-muted">
-                © <?= date('Y'); ?> Bank Multimedia - Kelompok 3
-            </small>
+        <div class="container-fluid text-center">
+            <small class="text-muted">© <?= date('Y'); ?> Bank Multimedia - Kelompok 3</small>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
-
 </html>
