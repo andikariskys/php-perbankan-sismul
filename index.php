@@ -28,13 +28,37 @@ session_start();
             color: #0d6efd;
         }
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
+            position: relative;
             min-height: 100vh;
             display: flex;
             align-items: center;
             color: white;
+            overflow: hidden;
+        }
+        .hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: 0;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
         }
         .hero-title {
             font-size: 3.5rem;
@@ -112,6 +136,11 @@ session_start();
 
     <!-- Hero Section -->
     <header class="hero-section">
+        <video autoplay muted loop class="hero-video">
+            <source src="assets/videos/video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="hero-overlay"></div>
         <div class="container text-center text-lg-start">
             <div class="row align-items-center">
                 <div class="col-lg-7">

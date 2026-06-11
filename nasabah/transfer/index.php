@@ -18,7 +18,7 @@ if ($_SESSION['nama_role'] !== 'Nasabah') {
     exit;
 }
 
-$query_rekening = "SELECT id, nomor_rekening_encrypted, saldo FROM rekening WHERE user_id = ? AND status_rekening = 'Aktif' ORDER BY id DESC";
+$query_rekening = "SELECT id, nomor_rekening_encrypted, saldo, jenis_rekening FROM rekening WHERE user_id = ? AND status_rekening = 'Aktif' ORDER BY id DESC";
 $stmt_rekening = mysqli_prepare($conn, $query_rekening);
 mysqli_stmt_bind_param($stmt_rekening, "i", $user_id);
 mysqli_stmt_execute($stmt_rekening);
@@ -252,7 +252,7 @@ while ($rekening = mysqli_fetch_assoc($result_rekening)) {
                                                     <option value="">-- Pilih Rekening --</option>
                                                     <?php foreach ($rekening_list as $rekening): ?>
                                                         <option value="<?= (int) $rekening['id']; ?>">
-                                                            <?= htmlspecialchars($rekening['nomor_rekening']); ?> - Saldo Rp<?= number_format((float) $rekening['saldo'], 0, ',', '.'); ?>
+                                                            <?= htmlspecialchars($rekening['nomor_rekening']); ?> (<?= htmlspecialchars($rekening['jenis_rekening']); ?>) - Saldo Rp<?= number_format((float) $rekening['saldo'], 0, ',', '.'); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>

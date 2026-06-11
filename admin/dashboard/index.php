@@ -42,7 +42,7 @@ $aktivitas_recent = getAktivitasTerbaru($conn, 10);
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
+        <div class="container-fluid">
 
             <a class="navbar-brand fw-bold" href="#">
                 Bank Multimedia

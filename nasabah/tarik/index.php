@@ -51,7 +51,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <body class="d-flex flex-column min-vh-100 bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <nav class="navbar navbar-expand navbar-dark bg-success">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">Bank Multimedia</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNasabah">
@@ -82,10 +82,10 @@ while ($row = mysqli_fetch_assoc($result)) {
     </header>
 
     <main class="flex-grow-1">
-        <div class="container-fluid py-4">
+        <div class="container py-4">
 
             <div class="row">
-                <div class="col-lg-5 mb-4">
+                <div class="col-5 mb-4">
                     
                     <?php if(isset($_SESSION['pesan_error'])): ?>
                         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -130,7 +130,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                             <form action="proses_tarik.php" method="POST">
                                 <div class="mb-3">
                                     <label for="rekening_id" class="form-label text-muted small">Pilih Rekening Sumber</label>
-                                    <select class="form-select form-select-lg" id="rekening_id" name="rekening_id" required>
+                                    <select class="form-select form-select" id="rekening_id" name="rekening_id" required>
                                         <option value="" disabled selected>-- Pilih Rekening --</option>
                                         <?php foreach($daftar_rekening as $rek): ?>
                                             <option value="<?= $rek['id']; ?>">
@@ -142,13 +142,13 @@ while ($row = mysqli_fetch_assoc($result)) {
 
                                 <div class="mb-3">
                                     <label for="nominal" class="form-label text-muted small">Nominal Tarik Tunai (Rp)</label>
-                                    <input type="number" class="form-control form-control-lg" id="nominal" name="nominal" required min="10000" placeholder="Contoh: 50000">
+                                    <input type="number" class="form-control form-control" id="nominal" name="nominal" required min="10000" placeholder="Contoh: 50000">
                                     <small class="text-muted">Minimum penarikan Rp 10.000</small>
                                 </div>
 
                                 <div class="mb-4">
                                     <label for="password" class="form-label text-muted small">Password Konfirmasi</label>
-                                    <input type="password" class="form-control form-control-lg" id="password" name="password" required placeholder="Masukkan password akun Anda">
+                                    <input type="password" class="form-control form-control" id="password" name="password" required placeholder="Masukkan password akun Anda">
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" <?= count($daftar_rekening) === 0 ? 'disabled' : ''; ?>>
@@ -159,7 +159,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     </div>
                 </div>
 
-                <div class="col-lg-7">
+                <div class="col-7">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
                             <h5 class="fw-bold"><i class="fas fa-history text-secondary me-2"></i>Riwayat Tarik Tunai</h5>
